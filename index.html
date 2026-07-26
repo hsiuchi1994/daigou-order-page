@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>日本代購訂購</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1 id="shop-name">代購商店</h1>
+      <p id="shop-tagline"></p>
+    </header>
+
+    <section>
+      <h2>下單規則</h2>
+      <ul id="rules-list">
+        <li class="loading">載入中...</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>商品介紹</h2>
+      <div id="products-list">
+        <p class="loading">載入中...</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>已選購清單</h2>
+      <div class="card" id="cart-summary">
+        <p id="cart-empty">尚未選擇任何商品</p>
+        <ul id="cart-items"></ul>
+        <div id="cart-total" style="display:none;">
+          <span>總計</span>
+          <span id="cart-total-amount">NT$ 0</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>訂購人資訊</h2>
+      <div class="card">
+        <form id="order-form">
+          <label for="field-name">姓名 *</label>
+          <input type="text" id="field-name" required>
+
+          <label for="field-line">LINE ID</label>
+          <input type="text" id="field-line">
+
+          <label for="field-phone">電話</label>
+          <input type="tel" id="field-phone">
+
+          <label for="field-note">備註</label>
+          <textarea id="field-note" placeholder="有其他需求可以在這裡說明"></textarea>
+
+          <button type="submit" id="submit-btn">送出訂單</button>
+          <div class="message" id="form-message"></div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+:root {
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --text: #2b2622;
+  --text-muted: #6b6259;
+  --border: #e8e2da;
+  --accent: #b5502f;
+  --accent-hover: #963f22;
+  --success-bg: #eaf4ec;
+  --success-text: #2f6b3f;
+  --error-bg: #fbeaea;
+  --error-text: #a3312a;
+  --radius: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1a18;
+    --surface: #262320;
+    --text: #f1ece6;
+    --text-muted: #b3aaa0;
+    --border: #3a352f;
+    --accent: #e0754d;
+    --accent-hover: #ec8b67;
+    --success-bg: #1f3324;
+    --success-text: #8fd6a2;
+    --error-bg: #3a2323;
+    --error-text: #e8918c;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 100px;
+}
+
+header.hero {
+  text-align: center;
+  padding: 40px 16px 28px;
+}
+
+header.hero h1 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+}
+
+header.hero p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+section {
+  margin-top: 28px;
+}
+
+section h2 {
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--border);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+#rules-list {
+  margin: 0;
+  padding-left: 1.2em;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 16px 16px 2em;
+}
+
+#rules-list li { margin-bottom: 6px; }
+#rules-list li:last-child { margin-bottom: 0; }
+
+.product-card {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.product-card img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-info .name {
+  font-weight: 600;
+}
+
+.product-info .desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 4px 0 8px;
+}
+
+.product-info .price {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.qty-control button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.qty-control button:active { transform: scale(0.95); }
+
+.qty-control input {
+  width: 44px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#cart-summary {
+  font-size: 0.95rem;
+}
+
+#cart-items {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+}
+
+#cart-items li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+#cart-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+#cart-empty {
+  color: var(--text-muted);
+}
+
+form#order-form label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 12px 0 4px;
+}
+
+form#order-form input,
+form#order-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+form#order-form textarea { resize: vertical; min-height: 60px; }
+
+button#submit-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button#submit-btn:hover { background: var(--accent-hover); }
+button#submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.message {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: none;
+}
+
+.message.show { display: block; }
+.message.success { background: var(--success-bg); color: var(--success-text); }
+.message.error { background: var(--error-bg); color: var(--error-text); }
+
+.loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 24px 0;
+}
