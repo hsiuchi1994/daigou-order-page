@@ -1,23 +1,45 @@
 const cart = {}; // { productName: { price, qty } }
 let products = [];
+const PROFILE_KEY = 'daigou-profile';
 
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
-  document.getElementById('shop-name').textContent = CONFIG.SHOP_NAME;
-  document.getElementById('shop-tagline').textContent = CONFIG.SHOP_TAGLINE;
-
   document.getElementById('order-form').addEventListener('submit', handleSubmit);
+  loadProfile();
 
   try {
     const res = await fetch(CONFIG.API_URL);
     const data = await res.json();
+    renderSettings(data.settings || {});
     renderRules(data.rules || []);
     products = data.products || [];
     renderProducts(products);
   } catch (err) {
     document.getElementById('rules-list').innerHTML = '<li>載入失敗，請稍後再試</li>';
     document.getElementById('products-list').innerHTML = '<p class="loading">商品載入失敗，請重新整理頁面</p>';
+  }
+}
+
+function renderSettings(settings) {
+  if (settings.shopName) {
+    document.getElementById('shop-name').textContent = settings.shopName;
+    document.title = settings.shopName;
+  }
+  document.getElementById('shop-tagline').textContent = settings.tagline || '';
+
+  if (settings.banner) {
+    const banner = document.getElementById('banner');
+    banner.src = settings.banner;
+    banner.hidden = false;
+    banner.addEventListener('error', function () { banner.hidden = true; });
+  }
+
+  const announcements = settings.announcements || [];
+  if (announcements.length) {
+    document.getElementById('announcement-list').innerHTML = announcements
+      .map(function (a) { return `<li>${escapeHtml(a)}</li>`; }).join('');
+    document.getElementById('announcements').hidden = false;
   }
 }
 
@@ -120,8 +142,8 @@ async function handleSubmit(e) {
   messageEl.className = 'message';
 
   const name = document.getElementById('field-name').value.trim();
-  const lineId = document.getElementById('field-line').value.trim();
   const phone = document.getElementById('field-phone').value.trim();
+  const lineId = document.getElementById('field-line').value.trim();
   const note = document.getElementById('field-note').value.trim();
   const items = Object.entries(cart).map(function ([name, item]) {
     return { name: name, price: item.price, qty: item.qty };
@@ -129,6 +151,10 @@ async function handleSubmit(e) {
 
   if (!name) {
     showMessage('請填寫姓名', 'error');
+    return;
+  }
+  if (!/^[0-9+\-\s()]{8,}$/.test(phone)) {
+    showMessage('請填寫正確的電話號碼', 'error');
     return;
   }
   if (!items.length) {
@@ -144,15 +170,16 @@ async function handleSubmit(e) {
     const res = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ name, lineId, phone, note, items })
+      body: JSON.stringify({ name, phone, lineId, note, items })
     });
     const result = await res.json();
 
     if (result.success) {
-      showMessage(`感謝訂購！您的訂單編號為 ${result.orderId}，我們會盡快與您確認訂單內容。`, 'success');
+      showMessage(`感謝訂購！您的訂單編號為 ${result.orderId}，總金額 NT$ ${result.total}，我們會盡快與您確認訂單內容。`, 'success');
+      saveProfile({ name, phone, lineId });
       Object.keys(cart).forEach(function (k) { delete cart[k]; });
       renderCart();
-      document.getElementById('order-form').reset();
+      document.getElementById('field-note').value = '';
       document.querySelectorAll('#products-list input[data-index]').forEach(function (input) {
         input.value = 0;
       });
@@ -165,6 +192,32 @@ async function handleSubmit(e) {
     submitBtn.disabled = false;
     submitBtn.textContent = '送出訂單';
   }
+}
+
+// 「記住我的資料」只存在客人自己的瀏覽器，不需要登入
+function loadProfile() {
+  let profile = null;
+  try {
+    profile = JSON.parse(localStorage.getItem(PROFILE_KEY));
+  } catch (err) {}
+  if (!profile) return;
+  document.getElementById('field-name').value = profile.name || '';
+  document.getElementById('field-phone').value = profile.phone || '';
+  document.getElementById('field-line').value = profile.lineId || '';
+}
+
+function saveProfile(profile) {
+  const remember = document.getElementById('field-remember').checked;
+  try {
+    if (remember) {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    } else {
+      localStorage.removeItem(PROFILE_KEY);
+      ['field-name', 'field-phone', 'field-line'].forEach(function (id) {
+        document.getElementById(id).value = '';
+      });
+    }
+  } catch (err) {}
 }
 
 function showMessage(text, type) {

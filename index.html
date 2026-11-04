@@ -8,10 +8,16 @@
 </head>
 <body>
   <div class="page">
+    <img id="banner" alt="" hidden>
+
     <header class="hero">
       <h1 id="shop-name">代購商店</h1>
       <p id="shop-tagline"></p>
     </header>
+
+    <section id="announcements" hidden>
+      <ul id="announcement-list"></ul>
+    </section>
 
     <section>
       <h2>下單規則</h2>
@@ -44,16 +50,21 @@
       <div class="card">
         <form id="order-form">
           <label for="field-name">姓名 *</label>
-          <input type="text" id="field-name" required>
+          <input type="text" id="field-name" autocomplete="name" required>
 
-          <label for="field-line">LINE ID</label>
+          <label for="field-phone">電話 *</label>
+          <input type="tel" id="field-phone" autocomplete="tel" inputmode="tel" required>
+
+          <label for="field-line">LINE ID（選填）</label>
           <input type="text" id="field-line">
 
-          <label for="field-phone">電話</label>
-          <input type="tel" id="field-phone">
-
-          <label for="field-note">備註</label>
+          <label for="field-note">備註（選填）</label>
           <textarea id="field-note" placeholder="有其他需求可以在這裡說明"></textarea>
+
+          <label class="remember">
+            <input type="checkbox" id="field-remember" checked>
+            記住我的資料，下次自動帶入
+          </label>
 
           <button type="submit" id="submit-btn">送出訂單</button>
           <div class="message" id="form-message"></div>

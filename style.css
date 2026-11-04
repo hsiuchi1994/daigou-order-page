@@ -6,6 +6,7 @@
   --border: #e8e2da;
   --accent: #b5502f;
   --accent-hover: #963f22;
+  --accent-soft: #fbeee8;
   --success-bg: #eaf4ec;
   --success-text: #2f6b3f;
   --error-bg: #fbeaea;
@@ -22,6 +23,7 @@
     --border: #3a352f;
     --accent: #e0754d;
     --accent-hover: #ec8b67;
+    --accent-soft: #3a2a22;
     --success-bg: #1f3324;
     --success-text: #8fd6a2;
     --error-bg: #3a2323;
@@ -236,4 +238,44 @@ button#submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   text-align: center;
   color: var(--text-muted);
   padding: 24px 0;
+}
+
+#banner {
+  display: block;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  max-height: 260px;
+  object-fit: cover;
+}
+
+#banner[hidden] { display: none; }
+
+#announcements {
+  margin-top: 0;
+}
+
+#announcement-list {
+  list-style: none;
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+
+#announcement-list li + li { margin-top: 6px; }
+
+form#order-form label.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+form#order-form label.remember input {
+  width: auto;
+  margin: 0;
 }
