@@ -127,14 +127,20 @@ function setupOrderSystem() {
     }));
   }
 
-  SpreadsheetApp.getUi().alert(
+  const message =
     '✅ 訂購系統設定完成！\n\n' +
     '1. 到「網頁設定」修改店名、標語、公告\n' +
     '2. 到「分類」分頁設定代購種類\n' +
     '3. 到「定價試算」最右邊填商品介紹、圖片網址、分類、商品備註（上架與否填 Ｏ 才會出現在網頁）\n' +
     '4. 到「下單規則」編輯規則文字\n\n' +
     '接下來請部署 Code.gs 為 Web App。'
-  );
+  ;
+  // 從 Apps Script 編輯器執行、試算表沒開著時無法跳出提示框，改寫在執行記錄裡
+  try {
+    SpreadsheetApp.getUi().alert(message);
+  } catch (err) {
+    console.log(message);
+  }
 }
 
 function styleHeader(range) {
