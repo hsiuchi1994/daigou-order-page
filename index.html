@@ -7,71 +7,24 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="page">
-    <img id="banner" alt="" hidden>
+  <header class="topbar">
+    <a href="#/" class="topbar-name" id="topbar-name">代購商店</a>
+    <a href="#/cart" class="topbar-cart" aria-label="購物車">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM5.2 4H2V2h4.8l.9 2H21a1 1 0 0 1 .9 1.4l-3.6 7a2 2 0 0 1-1.8 1.1H8.1l-1 1.8V16h12v2H7a2 2 0 0 1-1.8-2.9l1.4-2.6L5.2 4Z"/></svg>
+      <span class="cart-badge" id="cart-badge" hidden>0</span>
+    </a>
+  </header>
 
-    <header class="hero">
-      <h1 id="shop-name">代購商店</h1>
-      <p id="shop-tagline"></p>
-    </header>
+  <div class="demo-ribbon" id="demo-ribbon" hidden>示意模式：圖片與商品為範例，送出訂單不會真的寫入 Sheet</div>
 
-    <section id="announcements" hidden>
-      <ul id="announcement-list"></ul>
-    </section>
+  <main id="app">
+    <p class="loading">載入中...</p>
+  </main>
 
-    <section>
-      <h2>下單規則</h2>
-      <ul id="rules-list">
-        <li class="loading">載入中...</li>
-      </ul>
-    </section>
-
-    <section>
-      <h2>商品介紹</h2>
-      <div id="products-list">
-        <p class="loading">載入中...</p>
-      </div>
-    </section>
-
-    <section>
-      <h2>已選購清單</h2>
-      <div class="card" id="cart-summary">
-        <p id="cart-empty">尚未選擇任何商品</p>
-        <ul id="cart-items"></ul>
-        <div id="cart-total" style="display:none;">
-          <span>總計</span>
-          <span id="cart-total-amount">NT$ 0</span>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <h2>訂購人資訊</h2>
-      <div class="card">
-        <form id="order-form">
-          <label for="field-name">姓名 *</label>
-          <input type="text" id="field-name" autocomplete="name" required>
-
-          <label for="field-phone">電話 *</label>
-          <input type="tel" id="field-phone" autocomplete="tel" inputmode="tel" required>
-
-          <label for="field-line">LINE ID（選填）</label>
-          <input type="text" id="field-line">
-
-          <label for="field-note">備註（選填）</label>
-          <textarea id="field-note" placeholder="有其他需求可以在這裡說明"></textarea>
-
-          <label class="remember">
-            <input type="checkbox" id="field-remember" checked>
-            記住我的資料，下次自動帶入
-          </label>
-
-          <button type="submit" id="submit-btn">送出訂單</button>
-          <div class="message" id="form-message"></div>
-        </form>
-      </div>
-    </section>
-  </div>
+  <a href="#/cart" class="cart-bar" id="cart-bar" hidden>
+    <span id="cart-bar-text"></span>
+    <span>查看購物車 →</span>
+  </a>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
