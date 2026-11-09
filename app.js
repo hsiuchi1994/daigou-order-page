@@ -1,9 +1,9 @@
-// 頁面：#/ 主頁、#/c/分類名稱 分類頁、#/cart 購物車、#/checkout 結帳
+// 頁面：#/ 主頁、#/c/分類名稱 分類頁、#/terms 購物須知、#/cart 購物車、#/checkout 結帳
 const CART_KEY = 'daigou-cart';
 const PROFILE_KEY = 'daigou-profile';
 const IS_DEMO = new URLSearchParams(location.search).has('demo');
 
-let store = { settings: {}, rules: [], categories: [], products: [] };
+let store = { settings: {}, content: {}, categories: [], products: [] };
 let cart = loadJson(CART_KEY) || {}; // { productName: qty }
 let lastOrder = null;
 
@@ -28,6 +28,9 @@ async function init() {
   const shopName = store.settings.shopName || '代購商店';
   document.getElementById('topbar-name').textContent = shopName;
   document.title = shopName;
+
+  store.content = store.content || {};
+  ['about', 'area', 'service', 'terms'].forEach(function (k) { store.content[k] = store.content[k] || []; });
 
   // 舊版 API 沒有分類時，全部歸到「其他」
   store.products.forEach(function (p) { p.category = p.category || '其他'; });
@@ -58,6 +61,7 @@ function loadDemoData() {
 function render() {
   const hash = decodeURIComponent(location.hash.replace(/^#/, '')) || '/';
   if (hash.indexOf('/c/') === 0) renderCategory(hash.slice(3));
+  else if (hash === '/terms') renderTerms();
   else if (hash === '/cart') renderCart();
   else if (hash === '/checkout') renderCheckout();
   else if (hash === '/done') renderDone();
@@ -73,23 +77,18 @@ function categoryHref(name) {
 
 function renderHome() {
   const s = store.settings;
+  const c = store.content;
   const banner = s.banner
     ? `<img class="banner" src="${escapeHtml(s.banner)}" alt="" onerror="this.remove()">`
     : '';
   const announcements = (s.announcements || []).length
     ? `<ul class="announcements">${s.announcements.map(function (a) { return `<li>${a}</li>`; }).join('')}</ul>`
     : '';
-  const rules = store.rules.length
-    ? `<details class="rules">
-         <summary>下單規則<span class="summary-hint"></span></summary>
-         <ol>${store.rules.map(function (r) { return `<li>${r}</li>`; }).join('')}</ol>
-       </details>`
-    : '';
   const categories = store.categories.length
-    ? `<div class="category-grid">${store.categories.map(function (c) {
-        return `<a class="category-card" href="${categoryHref(c.name)}">
-                  <span class="category-name">${escapeHtml(c.name)}</span>
-                  <span class="category-count">${c.count} 件商品 →</span>
+    ? `<div class="category-grid">${store.categories.map(function (cat) {
+        return `<a class="category-card" href="${categoryHref(cat.name)}">
+                  <span class="category-name">${escapeHtml(cat.name)}</span>
+                  <span class="category-count">${cat.count} 件商品 →</span>
                 </a>`;
       }).join('')}</div>`
     : '<p class="empty">目前尚無上架商品</p>';
@@ -102,12 +101,92 @@ function renderHome() {
         ${s.tagline ? `<p>${escapeHtml(s.tagline)}</p>` : ''}
       </section>
       ${announcements}
-      ${rules}
       <section>
         <h2>代購種類</h2>
         ${categories}
       </section>
+      ${c.area.length ? `
+        <section>
+          <h2>服務範圍</h2>
+          <div class="card area content">${c.area.map(function (b) { return formatBlock(b.body); }).join('')}</div>
+        </section>` : ''}
+      ${c.service.length ? `
+        <section>
+          <h2>服務說明</h2>
+          ${c.service.map(collapsibleHtml).join('')}
+        </section>` : ''}
+      ${c.terms.length ? `
+        <a class="terms-card" href="#/terms">
+          <span><strong>📝 購物須知</strong><span class="muted">下單前請先閱讀</span></span>
+          <span>→</span>
+        </a>` : ''}
+      ${c.about.length ? `
+        <section>
+          <h2>關於我們</h2>
+          <div class="card">${c.about.map(blockWithTitleHtml).join('')}</div>
+        </section>` : ''}
     </div>`;
+}
+
+// ===== 購物須知 =====
+
+function renderTerms() {
+  app.innerHTML = `
+    <div class="page">
+      <a class="back-link" href="#/">← 回首頁</a>
+      <h2 class="page-title">購物須知</h2>
+      ${store.content.terms.length
+        ? store.content.terms.map(function (b) { return `<div class="card terms-block">${blockWithTitleHtml(b)}</div>`; }).join('')
+        : '<p class="empty">尚未設定購物須知</p>'}
+    </div>`;
+}
+
+// ===== 頁面內容排版 =====
+
+function collapsibleHtml(b) {
+  return `<details class="collapsible"><summary>${escapeHtml(b.title || '詳細說明')}</summary><div class="content">${formatBlock(b.body)}</div></details>`;
+}
+
+function blockWithTitleHtml(b) {
+  return (b.title ? `<h3 class="block-title">${escapeHtml(b.title)}</h3>` : '') + `<div class="content">${formatBlock(b.body)}</div>`;
+}
+
+// 內容一行一行排版：「・」開頭是項目、「1.」開頭是步驟、整行【】是小標題，其他是段落
+// body 是後台轉好的 HTML（已跳脫、只含連結），所以可以直接放進頁面
+function formatBlock(body) {
+  let html = '';
+  let listType = null;
+  const closeList = function () {
+    if (listType) html += `</${listType}>`;
+    listType = null;
+  };
+  const openList = function (type) {
+    if (listType !== type) {
+      closeList();
+      html += `<${type}>`;
+      listType = type;
+    }
+  };
+
+  String(body).split('\n').forEach(function (raw) {
+    const line = raw.trim();
+    if (!line) return closeList();
+    if (/^[・•‧·]/.test(line)) {
+      openList('ul');
+      html += `<li>${line.replace(/^[・•‧·]\s*/, '')}</li>`;
+    } else if (/^\d+[.、．]\s*/.test(line)) {
+      openList('ol');
+      html += `<li>${line.replace(/^\d+[.、．]\s*/, '')}</li>`;
+    } else if (/^【.*】$/.test(line)) {
+      closeList();
+      html += `<h4>${line.slice(1, -1)}</h4>`;
+    } else {
+      closeList();
+      html += `<p>${line}</p>`;
+    }
+  });
+  closeList();
+  return html;
 }
 
 // ===== 分類頁 =====
@@ -268,6 +347,11 @@ function renderCheckout() {
               <input type="checkbox" id="field-remember" checked>
               記住我的資料，下次自動帶入
             </label>
+            ${store.content.terms.length ? `
+              <label class="remember">
+                <input type="checkbox" id="field-agree">
+                <span>我已閱讀並同意 <a href="#/terms" target="_blank">購物須知</a></span>
+              </label>` : ''}
 
             <button type="submit" class="btn-primary" id="submit-btn">送出訂單</button>
             <div class="message" id="form-message"></div>
@@ -290,6 +374,8 @@ async function handleSubmit(e) {
 
   if (!name) return showMessage('請填寫姓名', 'error');
   if (!/^[0-9+\-\s()]{8,}$/.test(phone)) return showMessage('請填寫正確的電話號碼', 'error');
+  const agree = document.getElementById('field-agree');
+  if (agree && !agree.checked) return showMessage('請先閱讀並勾選同意購物須知', 'error');
 
   const submitBtn = document.getElementById('submit-btn');
   submitBtn.disabled = true;

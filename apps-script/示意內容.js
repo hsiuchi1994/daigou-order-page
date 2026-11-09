@@ -34,18 +34,6 @@ function fillDemoContent() {
     settings.getRange(row, 2).setRichTextValue(rich);
   });
 
-  // ===== 下單規則 =====
-  const rules = ss.getSheetByName('下單規則');
-  if (rules.getLastRow() >= 2) rules.getRange(2, 1, rules.getLastRow() - 1, 1).clearContent();
-  [
-    linked('付款方式為 LINE Pay / 銀行轉帳，訂單成立後 24 小時內請完成付款'),
-    linked('每週三統一送出日本訂單，出貨後約 10-14 天送達'),
-    linked('商品為預購性質，不接受任意取消或退換貨'),
-    linked('運費計算方式請參考 [[日本郵便 EMS]]', EMS)
-  ].forEach(function (rich, i) {
-    rules.getRange(i + 2, 1).setRichTextValue(rich);
-  });
-
   // ===== 商品 =====
   const sheet = ss.getSheetByName('定價試算');
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]

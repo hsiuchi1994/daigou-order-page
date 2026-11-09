@@ -1,6 +1,6 @@
 /**
  * 代購訂購頁面的後端 API（部署為 Web App）。
- * GET  → 回傳網頁設定、下單規則、分類與商品列表（「定價試算」中上架與否為 Ｏ 的商品）
+ * GET  → 回傳網頁設定、頁面內容（關於我們、服務範圍、服務說明、購物須知）、分類與商品列表（「定價試算」中上架與否為 Ｏ 的商品）
  * POST → 接收消費者訂單，寫入「訂單」（明細）與「訂單總覽」分頁
  */
 
@@ -13,7 +13,7 @@ function doGet(e) {
   const products = readProducts(ss);
   return jsonOutput({
     settings: readSettings(ss),
-    rules: readRules(ss),
+    content: readContent(ss),
     categories: readCategories(ss, products),
     products: products
   });
@@ -102,19 +102,28 @@ function readSettings(ss) {
   return settings;
 }
 
-// 「下單規則」分頁：A 欄一列一條，可用 ⌘K 加連結
-function readRules(ss) {
-  const sheet = ss.getSheetByName('下單規則');
-  if (!sheet || sheet.getLastRow() < 2) return [];
-  const range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1);
+// 「頁面內容」分頁：A 欄區塊、B 欄標題、C 欄內容（可換行、可用 ⌘K 加連結）
+// 內容的換行會保留，排版交給前台（・開頭是項目、1. 開頭是步驟、【】是小標題）
+const CONTENT_SECTIONS = { '關於我們': 'about', '服務範圍': 'area', '服務說明': 'service', '購物須知': 'terms' };
+
+function readContent(ss) {
+  const content = { about: [], area: [], service: [], terms: [] };
+  const sheet = ss.getSheetByName('頁面內容');
+  if (!sheet || sheet.getLastRow() < 2) return content;
+
+  const range = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3);
   const values = range.getValues();
   const richTexts = range.getRichTextValues();
-  return values
-    .map(function (row, i) {
-      const text = String(row[0]).trim();
-      return text ? richTextToHtml(richTexts[i][0], text) : '';
-    })
-    .filter(String);
+  values.forEach(function (row, i) {
+    const key = CONTENT_SECTIONS[String(row[0]).trim()];
+    const body = String(row[2]).trim();
+    if (!key || !body) return;
+    content[key].push({
+      title: String(row[1]).trim(),
+      body: richTextToHtml(richTexts[i][2], body, true)
+    });
+  });
+  return content;
 }
 
 // 「分類」分頁：A 欄分類名稱、B 欄顯示與否（Ｏ 或留空都算顯示，填「否」才隱藏）；順序即網頁上的順序
@@ -184,17 +193,17 @@ function readProducts(ss) {
   return products;
 }
 
-// 把儲存格的文字轉成 HTML：一般文字會跳脫，⌘K 加的連結變成 <a>，換行變成 <br>
-function richTextToHtml(richText, fallback) {
+// 把儲存格的文字轉成 HTML：一般文字會跳脫，⌘K 加的連結變成 <a>，換行變成 <br>（keepNewlines 時保留原本換行）
+function richTextToHtml(richText, fallback, keepNewlines) {
   const runs = richText ? richText.getRuns() : [];
-  if (!runs.length) return escapeHtml(fallback);
-  return runs.map(function (run) {
+  const html = !runs.length ? escapeHtml(fallback) : runs.map(function (run) {
     const text = escapeHtml(run.getText());
     const url = run.getLinkUrl();
     return url && /^https?:\/\//i.test(url)
       ? '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + text + '</a>'
       : text;
-  }).join('').replace(/\n/g, '<br>');
+  }).join('');
+  return keepNewlines ? html : html.replace(/\n/g, '<br>');
 }
 
 function escapeHtml(str) {

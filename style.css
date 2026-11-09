@@ -171,41 +171,6 @@ section h2, .section-label {
 
 .announcements li + li { margin-top: 6px; }
 
-.rules {
-  margin-top: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.rules summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  font-weight: 600;
-  cursor: pointer;
-  list-style: none;
-}
-
-.rules summary::-webkit-details-marker { display: none; }
-
-.summary-hint {
-  font-size: 0.82rem;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
-.summary-hint::after { content: "點擊展開 ▾"; }
-.rules[open] .summary-hint::after { content: "收合 ▴"; }
-
-.rules ol {
-  margin: 0;
-  padding: 0 16px 14px 2.2em;
-}
-
-.rules li + li { margin-top: 6px; }
-
 .category-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -577,3 +542,89 @@ section h2, .section-label {
 .done h2 { margin: 0 0 12px; }
 .done p { margin: 4px 0; }
 .muted { color: var(--text-muted); }
+
+/* ===== 頁面內容（服務範圍、服務說明、購物須知、關於我們）===== */
+
+.content p { margin: 0 0 8px; }
+.content p:last-child { margin-bottom: 0; }
+
+.content h4 {
+  margin: 14px 0 6px;
+  font-size: 0.92rem;
+  color: var(--accent);
+}
+
+.content h4:first-child { margin-top: 0; }
+
+.content ul,
+.content ol {
+  margin: 0 0 8px;
+  padding-left: 1.4em;
+}
+
+.content li + li { margin-top: 4px; }
+
+.area ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.area li + li { margin-top: 0; }
+
+.area li {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 0.9rem;
+}
+
+.collapsible {
+  margin-bottom: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.collapsible summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.collapsible summary::-webkit-details-marker { display: none; }
+.collapsible summary::after { content: "▾"; color: var(--text-muted); }
+.collapsible[open] summary::after { content: "▴"; }
+
+.collapsible .content {
+  padding: 0 16px 14px;
+}
+
+.terms-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding: 16px;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.terms-card strong { display: block; }
+.terms-card .muted { font-size: 0.85rem; }
+
+.block-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.terms-block { margin-bottom: 12px; }
