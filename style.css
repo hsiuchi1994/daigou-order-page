@@ -544,6 +544,42 @@ section h2, .section-label {
 
 .done h2 { margin: 0 0 12px; }
 .done p { margin: 4px 0; }
+
+.order-id-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 auto 8px;
+  padding: 10px 14px;
+  max-width: 420px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.order-id-box strong { font-size: 1.1rem; letter-spacing: 0.02em; }
+
+.btn-copy {
+  padding: 4px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.done .save-hint {
+  margin: 14px auto 8px;
+  padding: 10px 14px;
+  max-width: 420px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  font-size: 0.9rem;
+}
 .muted { color: var(--text-muted); }
 
 /* ===== 頁面內容（服務範圍、服務說明、購物須知、關於我們）===== */

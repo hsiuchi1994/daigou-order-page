@@ -427,12 +427,37 @@ function renderDone() {
     <div class="page done">
       <div class="done-icon">✓</div>
       <h2>感謝訂購！</h2>
-      <p>訂單編號 <strong>${escapeHtml(lastOrder.orderId)}</strong></p>
+      <div class="order-id-box">
+        <span class="muted">訂單編號</span>
+        <strong id="done-order-id">${escapeHtml(lastOrder.orderId)}</strong>
+        <button type="button" class="btn-copy" id="copy-order-id">複製</button>
+      </div>
       <p>總金額 <strong>NT$ ${formatPrice(lastOrder.total)}</strong></p>
-      <p class="muted">我們會盡快與您確認訂單內容。<br>之後可以用訂單編號＋電話查詢處理進度。</p>
+      <p class="save-hint">📸 請<strong>截圖保存</strong>此頁，之後用訂單編號＋電話查詢進度</p>
+      <p class="muted">我們會盡快與您確認訂單內容。</p>
       <a class="btn-primary" href="#/order/${encodeURIComponent(lastOrder.orderId)}">查詢訂單狀態</a>
       <a class="btn-secondary" href="#/">回首頁</a>
     </div>`;
+
+  document.getElementById('copy-order-id').addEventListener('click', copyOrderId);
+}
+
+async function copyOrderId(e) {
+  const btn = e.currentTarget;
+  const text = document.getElementById('done-order-id').textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    // 舊瀏覽器或 LINE 內建瀏覽器不支援時，改用選取文字複製
+    const input = document.createElement('textarea');
+    input.value = text;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    input.remove();
+  }
+  btn.textContent = '已複製 ✓';
+  setTimeout(function () { btn.textContent = '複製'; }, 2000);
 }
 
 // ===== 查詢訂單 =====
