@@ -476,18 +476,21 @@ section h2, .section-label {
   padding: 3px 0;
 }
 
-#order-form label {
+#order-form label,
+#lookup-form label {
   display: block;
   font-size: 0.9rem;
   color: var(--text-muted);
   margin: 12px 0 4px;
 }
 
-#order-form label:first-child { margin-top: 0; }
+#order-form label:first-child,
+#lookup-form label:first-child { margin-top: 0; }
 
 #order-form input[type="text"],
 #order-form input[type="tel"],
-#order-form textarea {
+#order-form textarea,
+#lookup-form input {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -628,3 +631,86 @@ section h2, .section-label {
 }
 
 .terms-block { margin-bottom: 12px; }
+
+/* ===== 查詢訂單 ===== */
+
+.recent-orders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.order-steps {
+  display: flex;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.order-steps li {
+  flex: 1;
+  position: relative;
+  padding-top: 30px;
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.order-steps li::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--border);
+  z-index: 1;
+}
+
+.order-steps li + li::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+}
+
+.order-steps li.passed::before,
+.order-steps li.current::before,
+.order-steps li.passed + li::after,
+.order-steps li.current::after { background: var(--accent); }
+
+.order-steps li.current::before { box-shadow: 0 0 0 4px var(--accent-soft); }
+.order-steps li.current { color: var(--accent); font-weight: 700; }
+
+.order-status {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.order-status.cancelled { color: var(--error-text); }
+
+.order-info li span:last-child { text-align: right; }

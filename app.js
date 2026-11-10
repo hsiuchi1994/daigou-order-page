@@ -1,6 +1,8 @@
-// 頁面：#/ 主頁、#/c/分類名稱 分類頁、#/terms 購物須知、#/cart 購物車、#/checkout 結帳
+// 頁面：#/ 主頁、#/c/分類名稱 分類頁、#/terms 購物須知、#/cart 購物車、#/checkout 結帳、#/order 查詢訂單
 const CART_KEY = 'daigou-cart';
 const PROFILE_KEY = 'daigou-profile';
+const ORDERS_KEY = 'daigou-orders'; // 這台裝置下過的訂單，查詢頁可以直接點
+const ORDER_STEPS = ['待付款', '已付款', '已訂購', '已出貨', '完成'];
 const IS_DEMO = new URLSearchParams(location.search).has('demo');
 
 let store = { settings: {}, content: {}, categories: [], products: [] };
@@ -65,6 +67,7 @@ function render() {
   else if (hash === '/cart') renderCart();
   else if (hash === '/checkout') renderCheckout();
   else if (hash === '/done') renderDone();
+  else if (hash === '/order' || hash.indexOf('/order/') === 0) renderOrderLookup(hash.slice(7));
   else renderHome();
   updateCartIndicators(hash);
 }
@@ -120,6 +123,10 @@ function renderHome() {
           <span><strong>📝 購物須知</strong><span class="muted">下單前請先閱讀</span></span>
           <span>→</span>
         </a>` : ''}
+      <a class="terms-card" href="#/order">
+        <span><strong>🔎 查詢訂單</strong><span class="muted">輸入訂單編號和電話，查看處理進度</span></span>
+        <span>→</span>
+      </a>
       ${c.about.length ? `
         <section>
           <h2>關於我們</h2>
@@ -400,6 +407,7 @@ async function handleSubmit(e) {
     } catch (err) {}
     cart = {};
     saveCart();
+    rememberOrder(result.orderId, phone);
     lastOrder = result;
     location.hash = '#/done';
   } catch (err) {
@@ -421,9 +429,113 @@ function renderDone() {
       <h2>感謝訂購！</h2>
       <p>訂單編號 <strong>${escapeHtml(lastOrder.orderId)}</strong></p>
       <p>總金額 <strong>NT$ ${formatPrice(lastOrder.total)}</strong></p>
-      <p class="muted">我們會盡快與您確認訂單內容。</p>
+      <p class="muted">我們會盡快與您確認訂單內容。<br>之後可以用訂單編號＋電話查詢處理進度。</p>
+      <a class="btn-primary" href="#/order/${encodeURIComponent(lastOrder.orderId)}">查詢訂單狀態</a>
       <a class="btn-secondary" href="#/">回首頁</a>
     </div>`;
+}
+
+// ===== 查詢訂單 =====
+
+function renderOrderLookup(orderId) {
+  const recent = loadJson(ORDERS_KEY) || [];
+  const known = recent.find(function (o) { return o.orderId === orderId; });
+  const phone = (known && known.phone) || (loadJson(PROFILE_KEY) || {}).phone || '';
+
+  app.innerHTML = `
+    <div class="page">
+      <a class="back-link" href="#/">← 回首頁</a>
+      <h2 class="page-title">查詢訂單</h2>
+
+      ${recent.length ? `
+        <section>
+          <h3 class="section-label">這台裝置的訂單</h3>
+          <div class="recent-orders">
+            ${recent.map(function (o) {
+              return `<a class="chip${o.orderId === orderId ? ' active' : ''}" href="#/order/${encodeURIComponent(o.orderId)}">${escapeHtml(o.orderId)}</a>`;
+            }).join('')}
+          </div>
+        </section>` : ''}
+
+      <section>
+        <div class="card">
+          <form id="lookup-form" class="form" novalidate>
+            <label for="lookup-id">訂單編號</label>
+            <input type="text" id="lookup-id" autocapitalize="characters" placeholder="例如 ORD2611101530xx" value="${escapeHtml(orderId)}">
+
+            <label for="lookup-phone">下單時填的電話</label>
+            <input type="tel" id="lookup-phone" inputmode="tel" autocomplete="tel" value="${escapeHtml(phone)}">
+
+            <button type="submit" class="btn-primary" id="lookup-btn">查詢</button>
+            <div class="message" id="form-message"></div>
+          </form>
+        </div>
+      </section>
+
+      <div id="lookup-result"></div>
+    </div>`;
+
+  document.getElementById('lookup-form').addEventListener('submit', handleLookup);
+  if (orderId && phone) handleLookup();
+}
+
+async function handleLookup(e) {
+  if (e) e.preventDefault();
+  const orderId = document.getElementById('lookup-id').value.trim().toUpperCase();
+  const phone = document.getElementById('lookup-phone').value.trim();
+  const resultEl = document.getElementById('lookup-result');
+  resultEl.innerHTML = '';
+  if (!orderId || !phone) return showMessage('請填寫訂單編號和電話', 'error');
+  document.getElementById('form-message').className = 'message';
+
+  const btn = document.getElementById('lookup-btn');
+  btn.disabled = true;
+  btn.textContent = '查詢中...';
+  try {
+    const result = IS_DEMO
+      ? { success: true, order: { orderId: orderId, date: '2026/11/10', items: '皮卡丘 絨毛娃娃（M） ×2、伊布 馬克杯 ×1', total: 2610, status: '已訂購' } }
+      : await (await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'lookup', orderId, phone })
+        })).json();
+    if (!result.success) return showMessage(result.error || '查詢失敗，請稍後再試', 'error');
+    rememberOrder(result.order.orderId, phone);
+    resultEl.innerHTML = orderResultHtml(result.order);
+  } catch (err) {
+    showMessage('查詢失敗，請確認網路連線後再試一次', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '查詢';
+  }
+}
+
+function orderResultHtml(o) {
+  const step = ORDER_STEPS.indexOf(o.status);
+  const progress = step >= 0
+    ? `<ol class="order-steps">${ORDER_STEPS.map(function (s, i) {
+        return `<li class="${i < step ? 'passed' : i === step ? 'current' : ''}">${escapeHtml(s)}</li>`;
+      }).join('')}</ol>`
+    : `<p class="order-status${o.status === '取消' ? ' cancelled' : ''}">${escapeHtml(o.status)}</p>`;
+  return `
+    <section>
+      <h3 class="section-label">訂單狀態</h3>
+      <div class="card">
+        ${progress}
+        <ul class="summary-list order-info">
+          <li><span class="muted">訂單編號</span><span>${escapeHtml(o.orderId)}</span></li>
+          ${o.date ? `<li><span class="muted">下單日期</span><span>${escapeHtml(o.date)}</span></li>` : ''}
+          <li><span class="muted">商品</span><span>${escapeHtml(o.items)}</span></li>
+        </ul>
+        <div class="total-row"><span>總金額</span><span>NT$ ${formatPrice(o.total)}</span></div>
+      </div>
+    </section>`;
+}
+
+function rememberOrder(orderId, phone) {
+  const recent = (loadJson(ORDERS_KEY) || []).filter(function (o) { return o.orderId !== orderId; });
+  recent.unshift({ orderId: orderId, phone: phone });
+  try { localStorage.setItem(ORDERS_KEY, JSON.stringify(recent.slice(0, 10))); } catch (err) {}
 }
 
 // ===== 購物車資料 =====

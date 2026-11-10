@@ -2,6 +2,7 @@
  * 代購訂購頁面的後端 API（部署為 Web App）。
  * GET  → 回傳網頁設定、頁面內容（關於我們、服務範圍、服務說明、購物須知）、分類與商品列表（「定價試算」中上架與否為 Ｏ 的商品）
  * POST → 接收消費者訂單，寫入「訂單」（明細）與「訂單總覽」分頁
+ *        action 為 lookup 時改成查詢訂單：訂單編號＋電話都對才回傳那一筆的狀態
  */
 
 const STATUS_DEFAULT = '待付款';
@@ -20,13 +21,19 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  let body;
+  try {
+    body = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return jsonOutput({ success: false, error: '資料格式錯誤' });
+  }
+  if (body.action === 'lookup') return lookupOrder(body);
+
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
 
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const body = JSON.parse(e.postData.contents);
-
     const name = (body.name || '').toString().trim();
     const phone = (body.phone || '').toString().trim();
     const lineId = (body.lineId || '').toString().trim();
@@ -79,6 +86,49 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// 查詢訂單：讀「訂單總覽」，依標題找欄位；只回傳狀態相關資料，不回傳姓名、電話
+function lookupOrder(body) {
+  const orderId = (body.orderId || '').toString().trim().toUpperCase();
+  const phone = normalizePhone(body.phone);
+  const notFound = { success: false, error: '查無訂單，請確認訂單編號和電話是否正確' };
+  if (!orderId || !phone) return jsonOutput(notFound);
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('訂單總覽');
+  if (!sheet || sheet.getLastRow() < 2) return jsonOutput(notFound);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0].map(function (h) { return String(h).trim(); });
+  const col = function (title) { return headers.indexOf(title); };
+  const C = {
+    time: col('時間戳記'), id: col('訂單編號'), phone: col('電話'),
+    items: col('品項'), total: col('總金額'), status: col('處理狀態')
+  };
+  if (C.id < 0 || C.phone < 0) return jsonOutput(notFound);
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (String(row[C.id]).trim().toUpperCase() !== orderId) continue;
+    if (normalizePhone(row[C.phone]) !== phone) return jsonOutput(notFound);
+    const time = C.time >= 0 ? row[C.time] : '';
+    return jsonOutput({
+      success: true,
+      order: {
+        orderId: String(row[C.id]).trim(),
+        date: time instanceof Date ? Utilities.formatDate(time, Session.getScriptTimeZone(), 'yyyy/MM/dd') : String(time),
+        items: C.items >= 0 ? String(row[C.items]) : '',
+        total: C.total >= 0 ? Number(row[C.total]) || 0 : 0,
+        status: (C.status >= 0 && String(row[C.status]).trim()) || STATUS_DEFAULT
+      }
+    });
+  }
+  return jsonOutput(notFound);
+}
+
+// 電話只比對數字；+886 9xx 和 09xx 視為同一支
+function normalizePhone(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  return digits.indexOf('886') === 0 ? '0' + digits.slice(3) : digits;
 }
 
 // 「網頁設定」分頁：A 欄項目、B 欄內容；「公告」可以有很多列，可用 ⌘K 加連結
